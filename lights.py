@@ -23,3 +23,4 @@ elif power == "on":
         Control.allOn()
     except Exception as e:
         print e
+
