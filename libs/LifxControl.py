@@ -16,18 +16,18 @@ class LifxControl(object):
     __token = ''
     __header = {"Authorization": "Bearer %s" % __token}
     __scene = {"Modern": "d1cdcd6b-7e54-4608-a419-ccfac4ee2b9f",
-              "Movie": "cb1a2a0c-e2b5-4f3a-9271-aa20ee5034fa",
-              "Gaming": "fc7ec00e-c930-48c6-ba87-afb70395508a",
-              "Normal": "1db71cee-e17e-46e4-b598-315aa766a5d0",
-              "Sunset": "6e1b5236-597c-4e34-b10f-bfa7babb5f8d",
-              "Sunrise": "67ecef8c-3af7-4f16-b818-07c16a36b158",
-              "Evening": "85b86aa6-35bf-411f-981d-ef6dc01061bd",
-              "UnderWater": "485d323f-aad7-403c-b88e-70a5cbb5a89b",
-              "Lamp": "088429a1-b17c-4b7a-96c0-205a0027e998",
-              "DarkRoom": "8a5b2ec1-f67f-4301-b179-2244b1738cb7",
-              "NightLight": "58b36976-21d0-4fe3-8878-4568a73913d7",
-              "Night3": "67a083fc-7c62-4896-8c43-618248841b04",
-              "Christmas": "e517b462-4a81-4a67-b420-7fcf711d9f97",}
+               "Movie": "cb1a2a0c-e2b5-4f3a-9271-aa20ee5034fa",
+               "Gaming": "fc7ec00e-c930-48c6-ba87-afb70395508a",
+               "Normal": "1db71cee-e17e-46e4-b598-315aa766a5d0",
+               "Sunset": "6e1b5236-597c-4e34-b10f-bfa7babb5f8d",
+               "Sunrise": "67ecef8c-3af7-4f16-b818-07c16a36b158",
+               "Evening": "85b86aa6-35bf-411f-981d-ef6dc01061bd",
+               "UnderWater": "485d323f-aad7-403c-b88e-70a5cbb5a89b",
+               "Lamp": "088429a1-b17c-4b7a-96c0-205a0027e998",
+               "DarkRoom": "8a5b2ec1-f67f-4301-b179-2244b1738cb7",
+               "NightLight": "58b36976-21d0-4fe3-8878-4568a73913d7",
+               "Night3": "67a083fc-7c62-4896-8c43-618248841b04",
+               "Christmas": "e517b462-4a81-4a67-b420-7fcf711d9f97"}
     logging.basicConfig(level=logging.INFO)
     log = logging.getLogger(__name__)
 
@@ -63,9 +63,13 @@ class LifxControl(object):
             raise Exception("REST Server not found!")
         json_data = json.loads(response.text)
         for light in json_data:
-            if light['power'] == 'off':
-                response = requests.put(self.__prefix + 'lights/all/state', data={"power": "on"}, headers=self.__header)
-                self.log.info("Light " + light['label'] + " on")
+            if light['connected']:
+                if light['power'] == 'off':
+                    response = requests.put(self.__prefix + 'lights/all/state', data={"power": "on"}, headers=self.__header)
+                    self.log.info("Light " + light['label'] + " on")
+                    self.log.info(response.status_code)
+            else:
+                self.log.error("Problem with light: " + light['label'] + " - " + light['id'])
         return
     '''
     Start the test system
