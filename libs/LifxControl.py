@@ -62,6 +62,8 @@ class LifxControl(object):
         except requests.ConnectionError:
             raise Exception("REST Server not found!")
         json_data = json.loads(response.text)
+        if response.status_code != 200:
+            raise Exception(json_data['error'])
         for light in json_data:
             if light['connected']:
                 if light['power'] == 'off':
@@ -80,6 +82,8 @@ class LifxControl(object):
         except requests.ConnectionError:
             raise Exception("REST Server not found!")
         json_data = json.loads(response.text)
+        if response.status_code != 200:
+            raise Exception(json_data['error'])
         for light in json_data:
             if light['power'] == 'on':
                 response = requests.put(self.__prefix + 'lights/all/state', data={"power": "off"}, headers=self.__header)
@@ -96,6 +100,8 @@ class LifxControl(object):
         except requests.ConnectionError:
             raise Exception("REST Server not found!")
         json_data = json.loads(response.text)
+        if response.status_code != 207:
+            raise Exception(json_data['error'])
         print json_data
         for light in json_data:
             self.log.info(light)
@@ -110,6 +116,8 @@ class LifxControl(object):
         except requests.ConnectionError:
             raise Exception("REST Server not found!")
         json_data = json.loads(response.text)
+        if response.status_code != 200:
+            raise Exception(json_data['error'])
         for light in json_data:
             self.log.info(light['name'] + " - " + light['uuid'])
         return
@@ -124,6 +132,8 @@ class LifxControl(object):
         except requests.ConnectionError:
             raise Exception("REST Server not found!")
         json_data = json.loads(response.text)
+        if response.status_code != 207:
+            raise Exception(json_data['error'])
         self.log.info(json_data)
         return
     '''
@@ -135,6 +145,8 @@ class LifxControl(object):
         except requests.ConnectionError:
             raise Exception("REST Server not found!")
         json_data = json.loads(response.text)
+        if response.status_code != 200:
+            raise Exception(json_data['error'])
         for light in json_data:
             print "Label    : {0}".format(light['label'])
             print "Id       : {0}".format(light['id'])
