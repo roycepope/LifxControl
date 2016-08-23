@@ -28,7 +28,7 @@ class LifxControl(object):
                "NightLight": "58b36976-21d0-4fe3-8878-4568a73913d7",
                "Night3": "67a083fc-7c62-4896-8c43-618248841b04",
                "Christmas": "e517b462-4a81-4a67-b420-7fcf711d9f97"}
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s %(message)s')
     log = logging.getLogger(__name__)
 
     '''
@@ -125,16 +125,18 @@ class LifxControl(object):
     '''
     Puls
     '''
-    def pulseAll(self):
+    def pulseAll(self, color):
+        if not color:
+            color = "green"
         try:
-            response = requests.post(self.__prefix + 'lights/all/effects/pulse', data={"period": 1, "cycles": 2, "color": "green"},
+            response = requests.post(self.__prefix + 'lights/all/effects/pulse', data={"period": 1, "cycles": 1, "color": color},
                                      headers=self.__header)
         except requests.ConnectionError:
             raise Exception("REST Server not found!")
         json_data = json.loads(response.text)
         if response.status_code != 207:
             raise Exception(json_data['error'])
-        self.log.info(json_data)
+        #self.log.info(json_data)
         return
     '''
     List all lights
