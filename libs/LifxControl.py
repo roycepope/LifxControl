@@ -28,6 +28,10 @@ class LifxControl(object):
                "NightLight": "58b36976-21d0-4fe3-8878-4568a73913d7",
                "Night3": "67a083fc-7c62-4896-8c43-618248841b04",
                "Christmas": "e517b462-4a81-4a67-b420-7fcf711d9f97"}
+    __light = {"Desk": "d073d527ef8f",
+               "Strip": "d073d528d383",
+               "Entry": "d073d5384329",
+               "Lamp": "d073d5120593"}
     logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s %(message)s')
     log = logging.getLogger(__name__)
 
@@ -56,6 +60,40 @@ class LifxControl(object):
     '''
     Start the test system
     '''
+    def lightOn(self, id, color):
+        try:
+            response = requests.put(self.__prefix + 'lights/' + id + '/state', data={"power": "on", "brightness": "0.3",
+                                                                                     "color": color}, headers=self.__header)
+        except requests.ConnectionError:
+            raise Exception("REST Server not found!")
+        json_data = json.loads(response.text)
+        self.log.info(response.status_code)
+        if response.status_code != 207:
+            raise Exception(json_data['error'])
+        else:
+            for item in json_data:
+                self.log.info(item)
+        return
+
+    '''
+    Start the test system
+    '''
+    def lightOff(self, id):
+        try:
+            response = requests.put(self.__prefix + 'lights/' + id + '/state', data={"power": "off"}, headers=self.__header)
+        except requests.ConnectionError:
+            raise Exception("REST Server not found!")
+        json_data = json.loads(response.text)
+        self.log.info(response.status_code)
+        if response.status_code != 207:
+            raise Exception(json_data['error'])
+        else:
+            for item in json_data:
+                self.log.info(item)
+        return
+    '''
+    Start the test system
+    '''
     def allOn(self):
         try:
             response = requests.get(self.__prefix + 'lights/all', headers=self.__header)
@@ -69,7 +107,7 @@ class LifxControl(object):
                 if light['power'] == 'off':
                     response = requests.put(self.__prefix + 'lights/all/state', data={"power": "on"}, headers=self.__header)
                     self.log.info("Light " + light['label'] + " on")
-                    self.log.info(response.status_code)
+                    #self.log.info(response.status_code)
             else:
                 self.log.error("Problem with light: " + light['label'] + " - " + light['id'])
         return
@@ -138,6 +176,7 @@ class LifxControl(object):
             raise Exception(json_data['error'])
         #self.log.info(json_data)
         return
+
     '''
     List all lights
     '''
@@ -150,16 +189,21 @@ class LifxControl(object):
         if response.status_code != 200:
             raise Exception(json_data['error'])
         for light in json_data:
-            print "Label    : {0}".format(light['label'])
-            print "Id       : {0}".format(light['id'])
-            print "Type     : {0}".format(light['product']['name'])
-            print "Group    : {0}".format(light['group']['name'])
-            print "Connected: {0}".format(light['connected'])
+            self.log.info("Label     : {0}".format(light['label']))
+            self.log.info("Id        : {0}".format(light['id']))
+            self.log.info("Type      : {0}".format(light['product']['name']))
+            self.log.info("Group     : {0}".format(light['group']['name']))
+            self.log.info("Connected : {0}".format(light['connected']))
             if light['power'] == 'on':
-                print "Power    : {0}".format(light['power'])
-                print "Hue      : {0}".format(light['color']['hue'])
-                print "Sat      : {0}".format(light['color']['saturation'])
-                print "Kelvin   : {0}\n".format(light['color']['kelvin'])
+                self.log.info("Power     : {0}".format(light['power']))
+                self.log.info("Brightness: {0}".format(light['brightness']))
+                self.log.info("Hue       : {0}".format(light['color']['hue']))
+                self.log.info("Sat       : {0}".format(light['color']['saturation']))
+                self.log.info("Kelvin    : {0}".format(light['color']['kelvin']))
+                if light['product']['identifier'] == 'lifx_z':
+                    self.log.info("Zone Count: {0}".format(light['zones']['count']))
+                self.log.info("\n")
             else:
-                print "Power    : {0}\n".format(light['power'])
+                self.log.info("Power     : {0}\n".format(light['power']))
+
         return
