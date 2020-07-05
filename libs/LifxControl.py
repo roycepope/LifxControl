@@ -7,6 +7,7 @@ Created on Oct 31, 2015
 import json
 import requests
 import logging
+from prettytable import PrettyTable
 
 
 class LifxControl(object):
@@ -31,13 +32,19 @@ class LifxControl(object):
     __light = {"Desk": "d073d527ef8f",
                "Strip": "d073d528d383",
                "Entry": "d073d5384329",
-               "Lamp": "d073d5120593"}
+               "Lamp": "d073d5120593",
+               "TV Left": "d073d55b449b",
+               "TV Right": "d073d536052a",
+               "Desk Left": "d073d52be6bf",
+               "Desk Right": "d073d527ef8f"
+               }
     logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s %(message)s')
     log = logging.getLogger(__name__)
 
     '''
     Constructor
     '''
+
     def __init__(self):
         self.__prefix = "https://api.lifx.com/v1/"
         pass
@@ -45,6 +52,7 @@ class LifxControl(object):
     '''
     Toggle all Lights
     '''
+
     def allToggle(self):
         try:
             response = requests.post(self.__prefix + 'lights/all/toggle', headers=self.__header)
@@ -60,10 +68,12 @@ class LifxControl(object):
     '''
     Start the test system
     '''
+
     def lightOn(self, id, color):
         try:
             response = requests.put(self.__prefix + 'lights/' + id + '/state', data={"power": "on", "brightness": "0.3",
-                                                                                     "color": color}, headers=self.__header)
+                                                                                     "color": color},
+                                    headers=self.__header)
         except requests.ConnectionError:
             raise Exception("REST Server not found!")
         json_data = json.loads(response.text)
@@ -78,9 +88,11 @@ class LifxControl(object):
     '''
     Start the test system
     '''
+
     def lightOff(self, id):
         try:
-            response = requests.put(self.__prefix + 'lights/' + id + '/state', data={"power": "off"}, headers=self.__header)
+            response = requests.put(self.__prefix + 'lights/' + id + '/state', data={"power": "off"},
+                                    headers=self.__header)
         except requests.ConnectionError:
             raise Exception("REST Server not found!")
         json_data = json.loads(response.text)
@@ -91,9 +103,11 @@ class LifxControl(object):
             for item in json_data:
                 self.log.info(item)
         return
+
     '''
     Start the test system
     '''
+
     def allOn(self):
         try:
             response = requests.get(self.__prefix + 'lights/all', headers=self.__header)
@@ -105,15 +119,18 @@ class LifxControl(object):
         for light in json_data:
             if light['connected']:
                 if light['power'] == 'off':
-                    response = requests.put(self.__prefix + 'lights/all/state', data={"power": "on"}, headers=self.__header)
+                    response = requests.put(self.__prefix + 'lights/all/state', data={"power": "on"},
+                                            headers=self.__header)
                     self.log.info("Light " + light['label'] + " on")
-                    #self.log.info(response.status_code)
+                    # self.log.info(response.status_code)
             else:
                 self.log.error("Problem with light: " + light['label'] + " - " + light['id'])
         return
+
     '''
     Start the test system
     '''
+
     def allOff(self):
         try:
             response = requests.get(self.__prefix + 'lights/all', headers=self.__header)
@@ -124,13 +141,15 @@ class LifxControl(object):
             raise Exception(json_data['error'])
         for light in json_data:
             if light['power'] == 'on':
-                response = requests.put(self.__prefix + 'lights/all/state', data={"power": "off"}, headers=self.__header)
+                response = requests.put(self.__prefix + 'lights/all/state', data={"power": "off"},
+                                        headers=self.__header)
                 self.log.info("All lights off")
         return
 
     '''
     List my Scenes
     '''
+
     def activateScene(self):
         try:
             response = requests.put(self.__prefix + 'scenes/scene_uuid:/activate',
@@ -148,6 +167,7 @@ class LifxControl(object):
     '''
     List my Scenes
     '''
+
     def listScenes(self):
         try:
             response = requests.get(self.__prefix + 'scenes', headers=self.__header)
@@ -163,23 +183,63 @@ class LifxControl(object):
     '''
     Puls
     '''
+
     def pulseAll(self, color):
         if not color:
             color = "green"
         try:
-            response = requests.post(self.__prefix + 'lights/all/effects/pulse', data={"period": 1, "cycles": 1, "color": color},
+            response = requests.post(self.__prefix + 'lights/all/effects/pulse',
+                                     data={"period": .1, "cycles": 5, "color": color},
                                      headers=self.__header)
         except requests.ConnectionError:
             raise Exception("REST Server not found!")
         json_data = json.loads(response.text)
         if response.status_code != 207:
             raise Exception(json_data['error'])
-        #self.log.info(json_data)
+        # self.log.info(json_data)
         return
 
     '''
     List all lights
     '''
+
+    def listLightsPretty(self):
+
+        table = PrettyTable()
+        lights_list = []
+
+        try:
+            response = requests.get(self.__prefix + 'lights/all', headers=self.__header)
+        except requests.ConnectionError:
+            raise Exception("REST Server not found!")
+        json_data = json.loads(response.text)
+        if response.status_code != 200:
+            raise Exception(json_data['error'])
+        for light in json_data:
+            table.field_names = ["Key", "Value"]
+            table.add_row(["Label", light['label']])
+            table.add_row(["Id", light['id']])
+            table.add_row(["Type", light['product']['name']])
+            table.add_row(["Group", light['group']['name']])
+            table.add_row(["Connected", light['connected']])
+            if light['power'] == 'on':
+                table.add_row(["Power", light['power']])
+                table.add_row(["Brightness", light['brightness']])
+                table.add_row(["Hue", light['color']['hue']])
+                table.add_row(["Saturation", light['color']['saturation']])
+                table.add_row(["Kelvin", light['color']['kelvin']])
+                if light['product']['identifier'] == 'lifx_z':
+                    table.add_row(["Zone Count", light['zones']['count']])
+            else:
+                table.add_row(["Power", light['power']])
+            print table
+            table.clear()
+        return
+
+    '''
+    List all lights
+    '''
+
     def listLights(self):
         try:
             response = requests.get(self.__prefix + 'lights/all', headers=self.__header)

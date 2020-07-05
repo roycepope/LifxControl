@@ -1,3 +1,4 @@
+#!/usr/bin/python
 __author__ = 'Royce'
 
 import logging
@@ -13,9 +14,9 @@ __light = {"Desk": "d073d527ef8f",
 
 try:
     #Control.allOn()
-    Control.listLights()
-    Control.lightOn(__light["Desk"], "yellow")
-    #Control.pulseAll()
+    #Control.listLightsPretty()
+    #Control.lightOn(__light["Desk"], "yellow")
+    Control.pulseAll("red")
     #Control.allOff()
     #Control.listScenes()
     #Control.activateScene()
